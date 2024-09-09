@@ -5,7 +5,7 @@ CoreDNS[1] fork with a blocklist plugin added.
 
 Domains blacklist is implemented via gravity.db[2] from the Pihole project.
 
-Additionally, /etc/hosts-like file can be used as a source, 
+Additionally, /etc/hosts-like file can be used as a DNS records source, 
 which is useful for simple SOHO networks.
 
 
