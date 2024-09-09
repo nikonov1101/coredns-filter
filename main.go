@@ -2,10 +2,8 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"os"
-	"strings"
 
 	"github.com/coredns/caddy"
 
@@ -29,72 +27,25 @@ import (
 	_ "github.com/coredns/coredns/plugin/tls"
 	_ "github.com/coredns/coredns/plugin/trace"
 
-	"gitlab.com/nikonov1101/coredns-filter/blocklist"
-	"gitlab.com/nikonov1101/coredns-filter/piholedb"
-)
-
-var (
-	flagDNSForwarder1        = flag.String("dns.forward1", "1.1.1.1", "Forwarding DNS #1")
-	flagDNSForwarder2        = flag.String("dns.forward2", "1.0.0.1", "Forwarding DNS #2")
-	flagPrometheusListenAddr = flag.String("prom.listen", "0.0.0.0:9999", "Prometheus listen address")
-	flagGravityDBPath        = flag.String("db", "gravity.db", "path to PiHole's gravity.db")
-	flagHostsFilePath        = flag.String("hosts-file", "", "path to a /etc/hosts-like file, disabled if empty")
+	// init our custom plugin
+	_ "gitlab.com/nikonov1101/coredns-filter/blocklist"
 )
 
 func main() {
 	flag.Parse()
 
-	rd, err := piholedb.New(*flagGravityDBPath)
+	caddyFile, err := caddy.LoadCaddyfile("dns")
 	if err != nil {
-		log.Printf("failed to read blocklist db: %v", err)
+		log.Printf("failed to load caddyfile: %v", err)
 		os.Exit(1)
 	}
 
-	if err := blocklist.InitPlugin(rd); err != nil {
-		log.Printf("failed to init blocklist plugin: %v", err)
-		os.Exit(2)
-	}
-
-	caddyFile := generateCaddyFile()
 	instance, err := caddy.Start(caddyFile)
 	if err != nil {
 		log.Printf("failed to start DNS server: %v", err)
-		os.Exit(3)
+		os.Exit(2)
 	}
 
-	log.Println("caddy: waiting...")
+	log.Println("caddy: running...")
 	instance.Wait()
-}
-
-// generateCaddyFile turns given flags into a Caddyfile for CoreDNS.
-func generateCaddyFile() caddy.CaddyfileInput {
-	// TODO(nikonov): how to TLS forwarders?
-	forwardServers := []string{
-		*flagDNSForwarder1,
-		*flagDNSForwarder2,
-	}
-
-	opts := []string{
-		"prometheus " + *flagPrometheusListenAddr,
-		"log",
-		"errors",
-		"blocklist",
-		"forward . " + strings.Join(forwardServers, " "),
-		"cache",
-	}
-
-	if flagHostsFilePath != nil && len(*flagHostsFilePath) > 0 {
-		opts = append(opts, "hosts "+*flagHostsFilePath)
-	}
-
-	bs := ". {\n" + strings.Join(opts, "\n") + "\n}"
-	log.Println(">>>>>> starting with config:")
-	fmt.Println(bs)
-	log.Println("<<<<<< end config")
-
-	return caddy.CaddyfileInput{
-		Filepath:       "",
-		Contents:       []byte(bs),
-		ServerTypeName: "dns",
-	}
 }

@@ -4,11 +4,13 @@ import (
 	"context"
 	"log"
 
-	"github.com/coredns/caddy"
-	"github.com/coredns/coredns/core/dnsserver"
 	"github.com/coredns/coredns/plugin"
 	"github.com/coredns/coredns/request"
 	"github.com/miekg/dns"
+)
+
+const (
+	pluginName = "blocklist"
 )
 
 // TODO(nikonov): domain top list
@@ -53,23 +55,4 @@ func (*blocklistPlugin) Name() string {
 
 func (*blocklistPlugin) Ready() bool {
 	return true
-}
-
-func InitPlugin(src blockListSource) error {
-	// TODO(nikonov): configure with Caddyfile,
-	//  take a look builtin plugins for implementation details, e.g
-	//  _ "github.com/coredns/coredns/plugin/hosts" in main.go
-	dnsserver.Directives = append([]string{pluginName}, dnsserver.Directives...)
-	setupFn := func(c *caddy.Controller) error {
-		dnsserver.GetConfig(c).AddPlugin(func(next plugin.Handler) plugin.Handler {
-			return &blocklistPlugin{
-				Next:      next,
-				blockList: src,
-			}
-		})
-		return nil
-	}
-
-	plugin.Register(pluginName, setupFn)
-	return nil
 }

@@ -6,10 +6,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
-const (
-	pluginName = "blocklist"
-)
-
 var passedQueriesCount = promauto.NewCounter(prometheus.CounterOpts{
 	Namespace: plugin.Namespace,
 	Subsystem: pluginName,

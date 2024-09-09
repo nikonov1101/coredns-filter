@@ -18,7 +18,7 @@ type PiHoleDatabaseReader struct {
 
 func New(path string) (*PiHoleDatabaseReader, error) {
 	if _, err := os.Stat(path); err != nil {
-		return nil, fmt.Errorf("gravity: failed to stat database at %q: %w", path, err)
+		return nil, err
 	}
 
 	// open in readonly mode, with a large cache and no journal: for maximum reading performance.
