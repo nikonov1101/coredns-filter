@@ -1,0 +1,14 @@
+coredns-filter
+=============
+
+CoreDNS[1] fork with a blocklist plugin added.
+
+Domains blacklist is implemented via gravity.db[2] from the Pihole project.
+
+Additionally, /etc/hosts-like file can be used as a source, 
+which is useful for simple SOHO networks.
+
+
+----
+[1] https://github.com/coredns/coredns
+[2] https://docs.pi-hole.net/database/gravity/
