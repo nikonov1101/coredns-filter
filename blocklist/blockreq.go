@@ -56,6 +56,9 @@ func (*blocklistPlugin) Ready() bool {
 }
 
 func InitPlugin(src blockListSource) error {
+	// TODO(nikonov): configure with Caddyfile,
+	//  take a look builtin plugins for implementation details, e.g
+	//  _ "github.com/coredns/coredns/plugin/hosts" in main.go
 	dnsserver.Directives = append([]string{pluginName}, dnsserver.Directives...)
 	setupFn := func(c *caddy.Controller) error {
 		dnsserver.GetConfig(c).AddPlugin(func(next plugin.Handler) plugin.Handler {

@@ -20,6 +20,7 @@ import (
 	_ "github.com/coredns/coredns/plugin/dnstap"
 	_ "github.com/coredns/coredns/plugin/errors"
 	_ "github.com/coredns/coredns/plugin/forward"
+	_ "github.com/coredns/coredns/plugin/hosts"
 	_ "github.com/coredns/coredns/plugin/log"
 	_ "github.com/coredns/coredns/plugin/metrics"
 	_ "github.com/coredns/coredns/plugin/minimal"
@@ -37,6 +38,7 @@ var (
 	flagDNSForwarder2        = flag.String("dns.forward2", "1.0.0.1", "Forwarding DNS #2")
 	flagPrometheusListenAddr = flag.String("prom.listen", "0.0.0.0:9999", "Prometheus listen address")
 	flagGravityDBPath        = flag.String("db", "gravity.db", "path to PiHole's gravity.db")
+	flagHostsFilePath        = flag.String("hosts-file", "", "path to a /etc/hosts-like file, disabled if empty")
 )
 
 func main() {
@@ -53,15 +55,7 @@ func main() {
 		os.Exit(2)
 	}
 
-	cfg := config{
-		PromListenAddr: *flagPrometheusListenAddr,
-		ForwardServers: []string{
-			*flagDNSForwarder1,
-			*flagDNSForwarder2,
-		},
-	}
-
-	caddyFile := cfg.intoCaddyfile()
+	caddyFile := generateCaddyFile()
 	instance, err := caddy.Start(caddyFile)
 	if err != nil {
 		log.Printf("failed to start DNS server: %v", err)
@@ -72,36 +66,28 @@ func main() {
 	instance.Wait()
 }
 
-type config struct {
-	PromListenAddr string
-	ForwardServers []string
-}
-
-func (c config) intoCaddyfile() caddy.CaddyfileInput {
-	if len(c.ForwardServers) == 0 {
-		// TODO(nikonov): how to TLS forwarders?
-		c.ForwardServers = []string{
-			"1.1.1.1",
-			"1.0.0.1",
-		}
-	}
-
-	if len(c.PromListenAddr) == 0 {
-		c.PromListenAddr = "0.0.0.0:9999"
+// generateCaddyFile turns given flags into a Caddyfile for CoreDNS.
+func generateCaddyFile() caddy.CaddyfileInput {
+	// TODO(nikonov): how to TLS forwarders?
+	forwardServers := []string{
+		*flagDNSForwarder1,
+		*flagDNSForwarder2,
 	}
 
 	opts := []string{
-		".:53 {",
-		"prometheus " + c.PromListenAddr,
+		"prometheus " + *flagPrometheusListenAddr,
 		"log",
 		"errors",
 		"blocklist",
-		"forward . " + strings.Join(c.ForwardServers, " "),
+		"forward . " + strings.Join(forwardServers, " "),
 		"cache",
-		"}",
 	}
 
-	bs := strings.Join(opts, "\n")
+	if flagHostsFilePath != nil && len(*flagHostsFilePath) > 0 {
+		opts = append(opts, "hosts "+*flagHostsFilePath)
+	}
+
+	bs := ". {\n" + strings.Join(opts, "\n") + "\n}"
 	log.Println(">>>>>> starting with config:")
 	fmt.Println(bs)
 	log.Println("<<<<<< end config")
