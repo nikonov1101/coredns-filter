@@ -8,24 +8,15 @@ import (
 	"github.com/coredns/caddy"
 
 	// make all plugins available
-	_ "github.com/coredns/coredns/plugin/any"
-	_ "github.com/coredns/coredns/plugin/bind"
 	_ "github.com/coredns/coredns/plugin/cache"
 	_ "github.com/coredns/coredns/plugin/cancel"
-	_ "github.com/coredns/coredns/plugin/chaos"
 	_ "github.com/coredns/coredns/plugin/debug"
-	_ "github.com/coredns/coredns/plugin/dnssec"
-	_ "github.com/coredns/coredns/plugin/dnstap"
 	_ "github.com/coredns/coredns/plugin/errors"
 	_ "github.com/coredns/coredns/plugin/forward"
 	_ "github.com/coredns/coredns/plugin/hosts"
 	_ "github.com/coredns/coredns/plugin/log"
 	_ "github.com/coredns/coredns/plugin/metrics"
 	_ "github.com/coredns/coredns/plugin/minimal"
-	_ "github.com/coredns/coredns/plugin/nsid"
-	_ "github.com/coredns/coredns/plugin/pprof"
-	_ "github.com/coredns/coredns/plugin/tls"
-	_ "github.com/coredns/coredns/plugin/trace"
 
 	// init our custom plugin
 	_ "gitlab.com/nikonov1101/coredns-filter/blocklist"
